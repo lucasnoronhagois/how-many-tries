@@ -2,7 +2,7 @@ import { useState } from 'react'
 import axios from 'axios'
 import './App.css'
 import { LanguageSwitcher } from './components/LanguageSwitcher'
-import { Locale, getLocale } from './locales'
+import { getLocale } from './locales'
 import { useLanguage } from './hooks/useLanguage'
 
 interface SimulationResult {

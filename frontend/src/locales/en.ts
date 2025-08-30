@@ -45,6 +45,7 @@ export const en = {
   // Language switcher
   languageSwitcher: "🌐",
   currentLanguage: "EN",
-  switchToPortuguese: "Mudar para Português"
+  switchToPortuguese: "Mudar para Português",
+  switchToEnglish: "Switch to English"
 };
 
