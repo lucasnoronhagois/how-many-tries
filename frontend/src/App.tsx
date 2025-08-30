@@ -60,7 +60,7 @@ function App() {
       const elapsed = Date.now() - startTime
       const progress = Math.min((elapsed / loadingDuration) * 100, 100)
       
-      setLoadingProgress(progress)
+      setLoadingProgress(Math.round(progress))
       
       if (progress >= 100) {
         clearInterval(loadingInterval)

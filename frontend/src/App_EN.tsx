@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import axios from 'axios'
 import './App.css'
 
 interface SimulationResult {
@@ -47,30 +46,89 @@ function App() {
     setError('')
     setResult(null)
     
-    // Simulates loading bar for 2 seconds
+    // Simulates loading bar for exactly 2 seconds
+    const startTime = Date.now()
+    const loadingDuration = 2000 // 2 seconds in milliseconds
+    
     const loadingInterval = setInterval(() => {
-      setLoadingProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(loadingInterval)
-          return 100
-        }
-        return prev + 5 // 100% in 2 seconds (5% every 100ms = 50% per second)
-      })
-    }, 100)
+      const elapsed = Date.now() - startTime
+      const progress = Math.min((elapsed / loadingDuration) * 100, 100)
+      
+      setLoadingProgress(Math.round(progress))
+      
+      if (progress >= 100) {
+        clearInterval(loadingInterval)
+      }
+    }, 50) // Updates every 50ms for smoother movement
     
     try {
-      const response = await axios.post('/api/simulate', {
-        successRate: rate,
-        maxAttempts: max
-      })
+      // Local simulation instead of calling API
+      const simulateAttempts = (successRate: number, maxAttempts: number = 1000) => {
+        let currentAttempts = 0;
+        let success = false;
+        while (currentAttempts < maxAttempts) {
+          currentAttempts++;
+          const random = Math.random() * 100;
+          if (random <= successRate) {
+            success = true;
+            break;
+          }
+        }
+        return {
+          attempts: currentAttempts,
+          success: success,
+          maxAttemptsReached: currentAttempts >= maxAttempts,
+          successRate
+        };
+      };
+
+      const simulateMultipleAttempts = (successRate: number, maxAttempts: number = 1000, numberOfSimulations: number = 5) => {
+        const results = [];
+        let totalAttempts = 0;
+        let totalSuccesses = 0;
+        let totalFailures = 0;
+        
+        for (let i = 0; i < numberOfSimulations; i++) {
+          const result = simulateAttempts(successRate, maxAttempts);
+          results.push(result);
+          totalAttempts += result.attempts;
+          if (result.success) {
+            totalSuccesses++;
+          } else {
+            totalFailures++;
+          }
+        }
+        
+        const averageAttempts = Math.round(totalAttempts / numberOfSimulations);
+        
+        return {
+          averageAttempts,
+          totalSuccesses,
+          totalFailures,
+          successRate,
+          maxAttemptsReached: results.some(r => r.maxAttemptsReached),
+          individualResults: results.map(r => ({
+            attempts: r.attempts,
+            success: r.success,
+            maxAttemptsReached: r.maxAttemptsReached,
+            successRate: r.successRate
+          })),
+          executionTime: Date.now(),
+          timestamp: new Date().toISOString()
+        };
+      };
       
-      setResult(response.data)
+      // Wait until 2 seconds are completed before showing the result
+      const elapsed = Date.now() - startTime
+      const remainingTime = Math.max(loadingDuration - elapsed, 0)
+      
+      await new Promise(resolve => setTimeout(resolve, remainingTime))
+      
+      // Execute local simulation
+      const result = simulateMultipleAttempts(rate, max, 5)
+      setResult(result)
     } catch (err: any) {
-      if (err.response?.data?.error) {
-        setError(err.response.data.error)
-      } else {
-        setError('Error connecting to server. Please check if the backend is running.')
-      }
+      setError('Error in local simulation')
     } finally {
       clearInterval(loadingInterval)
       setLoadingProgress(100)
