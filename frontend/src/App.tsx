@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import axios from 'axios'
 import './App.css'
 import { LanguageSwitcher } from './components/LanguageSwitcher'
 import { getLocale } from './locales'
@@ -69,12 +68,59 @@ function App() {
     }, 50) // Atualiza a cada 50ms para movimento mais suave
     
     try {
-      // Use environment variable for API URL or default to localhost
-      const apiUrl = import.meta.env.VITE_API_URL || '/api'
-      const response = await axios.post(`${apiUrl}/simulate`, {
-        successRate: rate,
-        maxAttempts: max
-      })
+      // Simulação local em vez de chamar API
+      const simulateAttempts = (successRate: number, maxAttempts: number = 1000) => {
+        let currentAttempts = 0;
+        while (currentAttempts < maxAttempts) {
+          currentAttempts++;
+          const random = Math.random() * 100;
+          if (random <= successRate) {
+            break;
+          }
+        }
+        return {
+          attempts: currentAttempts,
+          success: currentAttempts <= maxAttempts,
+          maxAttemptsReached: currentAttempts >= maxAttempts,
+          successRate
+        };
+      };
+
+      const simulateMultipleAttempts = (successRate: number, maxAttempts: number = 1000, numberOfSimulations: number = 5) => {
+        const results = [];
+        let totalAttempts = 0;
+        let totalSuccesses = 0;
+        let totalFailures = 0;
+        
+        for (let i = 0; i < numberOfSimulations; i++) {
+          const result = simulateAttempts(successRate, maxAttempts);
+          results.push(result);
+          totalAttempts += result.attempts;
+          if (result.success) {
+            totalSuccesses++;
+          } else {
+            totalFailures++;
+          }
+        }
+        
+        const averageAttempts = Math.round(totalAttempts / numberOfSimulations);
+        
+        return {
+          averageAttempts,
+          totalSuccesses,
+          totalFailures,
+          successRate,
+          maxAttemptsReached: results.some(r => r.maxAttemptsReached),
+          individualResults: results.map(r => ({
+            attempts: r.attempts,
+            success: r.success,
+            maxAttemptsReached: r.maxAttemptsReached,
+            successRate: r.successRate
+          })),
+          executionTime: Date.now(),
+          timestamp: new Date().toISOString()
+        };
+      };
       
       // Aguarda até completar os 2 segundos antes de mostrar o resultado
       const elapsed = Date.now() - startTime
@@ -82,13 +128,11 @@ function App() {
       
       await new Promise(resolve => setTimeout(resolve, remainingTime))
       
-      setResult(response.data)
+      // Executa a simulação local
+      const result = simulateMultipleAttempts(rate, max, 5)
+      setResult(result)
     } catch (err: any) {
-      if (err.response?.data?.error) {
-        setError(err.response.data.error)
-      } else {
-        setError(t.serverError)
-      }
+      setError('Erro na simulação local')
     } finally {
       clearInterval(loadingInterval)
       setLoadingProgress(100)
