@@ -7,7 +7,6 @@ dist/
 build/
 */dist/
 */build/
-frontend/build/
 frontend/dist/
 
 # Environment variables
