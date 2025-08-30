@@ -71,16 +71,18 @@ function App() {
       // Simulação local em vez de chamar API
       const simulateAttempts = (successRate: number, maxAttempts: number = 1000) => {
         let currentAttempts = 0;
+        let success = false;
         while (currentAttempts < maxAttempts) {
           currentAttempts++;
           const random = Math.random() * 100;
           if (random <= successRate) {
+            success = true;
             break;
           }
         }
         return {
           attempts: currentAttempts,
-          success: currentAttempts <= maxAttempts,
+          success: success,
           maxAttemptsReached: currentAttempts >= maxAttempts,
           successRate
         };
